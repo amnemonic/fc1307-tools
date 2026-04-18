@@ -2,7 +2,7 @@
 
 | FEATURES |  LBA_LOW |  LBA_MID |  LBA_HI  | DESCRIPTION                                               |
 |  :---:   |  :---:   |  :---:   |  :---:   | :---                                                      |
-|   00h    |    -     |    -     |    -     | Read FW Version and SDCard CIS/CSD                        |
+|   00h    |    -     |    -     |    -     | Read FW Version and SDCard CID/CSD                        |
 |   01h    |   [x]    |    -     |    -     | ?                                                         |
 |   02h    |    -     |    -     |    -     | SPI: Read Manufacturer and ID (RDMDID, 90h)               |
 |   03h    |    -     |    -     |    -     | SPI: Read Product Identification BY JEDEC ID (RDJDID, 9Fh)|
