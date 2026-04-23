@@ -6,6 +6,13 @@
 ; @220E   lcall   code_30CD(R3=0x28, R5=0x2C, R7=0xA0)  - R3=BUFF_LEN, R5=CMD 2Ch (GET MODEL NAME)                , R7=0xA0 (ADDRESS?)
 ; @23BC   lcall   code_30CD(R3=0x02, R5=0x0D, R7=0xA0)  - R3=BUFF_LEN, R5=CMD 0Dh (GET CURR SELECTED DMA MODE)    , R7=0xA0 (ADDRESS?)
 
+;
+; READ EEPROM DATA
+; ARG1 (R3) = BYTES TO READ
+; ARG2 (R5) = OFFSET
+; ARG3 (R7) = EEPROM ADDRESS
+;
+
 code_30CD:
                 mov     RAM_76, R7
                 mov     RAM_77, R5
