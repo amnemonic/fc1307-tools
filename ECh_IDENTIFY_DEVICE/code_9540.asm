@@ -297,11 +297,11 @@ code_20CC:
 
 code_20DD:
                 mov     R3, #0x03       ; BUFFER SIZE (@ 0x5C00)
-                mov     R5, #0x0A       ; FUNCTION - 0x0A = GET STATES OF SN, FW, MODEL
-                mov     R7, #0xA0       ; ?
-                lcall   code_30CD
-                jc      code_20EB
-                ljmp    code_2256
+                mov     R5, #0x0A       ; OFFSET - 0x0A = GET STATES OF SN, FW, MODEL
+                mov     R7, #0xA0       ; CHIP ADDRESS
+                lcall   code_30CD       ; READ EEPROM
+                jc      code_20EB       ; IF C==1 THEN READ IS OK
+                ljmp    code_2256       ; ELSE EXIT
 
 
 ; ---------------------------------------------------------------------------
@@ -354,10 +354,10 @@ code_210D:
 
 code_2126:
                 mov     R3, #0x14       ; BUFFER SIZE (@ 0x5C00)
-                mov     R5, #0x10       ; FUNCTION - 0x10 = GET SERIAL NUMBER
-                mov     R7, #0xA0       ; ?
-                lcall   code_30CD
-                jnc     code_2174
+                mov     R5, #0x10       ; OFFSET - 0x10 = GET SERIAL NUMBER
+                mov     R7, #0xA0       ; CHIP ADDRESS
+                lcall   code_30CD       ; READ EEPROM
+                jnc     code_2174       ; IF C==0 (CAN'T READ), EXIT
 
                 ; Copy 0x14 characters from MEM[0x5C00] to [0x4014]
                 ; WORD 10-19 - Serial number (20 ASCII characters)
@@ -439,10 +439,10 @@ code_217E:
 
 code_2197:
                 mov     R3, #0x08       ; BUFFER SIZE (@ 0x5C00)
-                mov     R5, #0x24       ; FUNCTION - 0x24 = GET FW REVISION
-                mov     R7, #0xA0       ; ?
-                lcall   code_30CD
-                jnc     code_21E5
+                mov     R5, #0x24       ; OFFSET - 0x24 = GET FW REVISION
+                mov     R7, #0xA0       ; CHIP ADDRESS
+                lcall   code_30CD       ; READ EEPROM
+                jnc     code_21E5       ; IF C==0 (CAN'T READ), EXIT
 
                 ; COPY 8 bytes from MEM[0x5C00] to MEM[0x402E]
                 ; WORDS 23-26 - Firmware revision (8 ASCII characters)
@@ -520,10 +520,10 @@ code_21EF:
 
 code_2208:
                 mov     R3, #0x28       ; BUFFER SIZE (@ 0x5C00)
-                mov     R5, #0x2C       ; FUNCTION - 0x2C = GET MODEL NAME
-                mov     R7, #0xA0       ; ?
-                lcall   code_30CD
-                jnc     code_2256
+                mov     R5, #0x2C       ; OFFSET - 0x2C = GET MODEL NAME
+                mov     R7, #0xA0       ; CHIP ADDRESS
+                lcall   code_30CD       ; READ EEPROM
+                jnc     code_2256       ; IF C==0 (CAN'T READ), EXIT
 
                 ; COPY 0x28 bytes from MEM[0x5C00] to MEM[0x4036]
                 ; WORDS 27-46 F Model number (40 ASCII characters)
@@ -837,10 +837,10 @@ code_2312:
 
                 jnb     RAM_2B.6, code_23CE
                 mov     R3, #0x02       ; BUFFER SIZE (@ 0x5C00)
-                mov     R5, #0x0D       ; FUNCTION - 0x0D = GET CURR SELECTED DMA MODE
-                mov     R7, #0xA0       ; ?
-                lcall   code_30CD
-                jnc     code_23CE
+                mov     R5, #0x0D       ; OFFSET - 0x0D = GET CURR SELECTED DMA MODE
+                mov     R7, #0xA0       ; CHIP ADDRESS
+                lcall   code_30CD       ; READ EEPROM
+                jnc     code_23CE       ; IF C==0 (CAN'T READ), EXIT
 
                 mov     DPTR, #0x5C00
                 movx    A, @DPTR

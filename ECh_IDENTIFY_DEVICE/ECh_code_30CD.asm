@@ -7,11 +7,18 @@
 ; @23BC   lcall   code_30CD(R3=0x02, R5=0x0D, R7=0xA0)  - R3=BUFF_LEN, R5=CMD 0Dh (GET CURR SELECTED DMA MODE)    , R7=0xA0 (ADDRESS?)
 
 ;
-; READ EEPROM DATA
+; READ EEPROM DATA AND STORE IT AT MEM[0x5C00]
 ; ARG1 (R3) = BYTES TO READ
 ; ARG2 (R5) = OFFSET
 ; ARG3 (R7) = EEPROM ADDRESS
 ;
+
+; ADDRESS ------------------------------
+; | 1 | 0 | 1 | 0 | A2 | A1 | A0 | R/W |
+; on schematic we see that A2,A1 and A0 are tied to GND
+; so WRITE address = 0b1010_0000 = 0xA0
+; and READ address = 0b1010_0001 = 0xA1
+
 
 code_30CD:
                 mov     RAM_76, R7
