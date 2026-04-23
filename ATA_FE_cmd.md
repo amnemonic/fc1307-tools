@@ -30,7 +30,7 @@
 |   1Bh    |   [x]    |   [x]    |   [x]    | SPI: Block Erase (BER64K, D8h)                            |
 |   1Ch    |    -     |    -     |    -     | SPI: Chip Erase (CER, C7h)                                |
 |   1Dh    |   [x]    |   [x]    |   [x]    | ?                                                         |
-|   1Eh    |   [x]    |   [x]    |   [x]    | ?                                                         |
+|   1Eh    |   [x]    |   [x]    |   [x]    | READ EEPROM (LL=CHIP_ADDR,LM=OFFSET,LH=LENGTH)            |
 |   30h    |    -     |    -     |    -     | ? _(Only in FW v3.72)_                                    |
 |   31h    |    -     |    -     |    -     | ? _(Only in FW v3.72)_                                    |
 |   32h    |    -     |    -     |    -     | ? _(Only in FW v3.72)_                                    |
