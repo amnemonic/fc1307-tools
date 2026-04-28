@@ -776,7 +776,7 @@ code_2312:
                 mov     R0, #0xAC
                 mov     A, @R0
                 mov     DPTR, #0x4072
-                movx    @DPTR, A        ; MEM[0x4072] = MEM[0xAC] 
+                movx    @DPTR, A        ; MEM[0x4072] = MEM[0xAC]
                 dec     R0
                 mov     A, @R0
                 inc     DPTR
@@ -821,13 +821,13 @@ code_2312:
 
                 ; WORD 47 - Maximum number of sectors that shall be transferred per interrupt on READ/WRITE MULTIPLE commands
                 mov     DPTR, #0x405E
-                movx    @DPTR, A        ; MEM[0x405E] = 0x01 
+                movx    @DPTR, A        ; MEM[0x405E] = 0x01
 
                 ; WORD 63 - DMA MODE FLAGS
                 mov     DPTR, #0x407E
                 mov     A, #7
                 movx    @DPTR, A        ; MEM[0x407E] = 7  (LOW BYTE)
-                
+
                 ; WORD 88 - DMA MODE SELECTED - LOW BYTE
                 mov     DPTR, #0x3D2E
                 clr     A
@@ -847,8 +847,8 @@ code_2312:
                 cjne    A, #0x99, code_23CE ; CHECK IF MEM[0x5C00]!=0x99 THEN EXIT
                 inc     DPTR
                 movx    A, @DPTR
-                mov     DPTR, #0x40B0   
-                movx    @DPTR, A        ; MEM[0x40B0] = MEM[0x5C01] 
+                mov     DPTR, #0x40B0
+                movx    @DPTR, A        ; MEM[0x40B0] = MEM[0x5C01]
 
                 ; WORD 63 - DMA MODE FLAGS cont.
 code_23CE:
@@ -872,14 +872,14 @@ code_23E1:      ; LOOP - SHIFT LETF RAM[0x99] so many by RAM_7 bits
 code_23E3:
                 djnz    R0, code_23E1   ; WAIT LOOP
 
-                ; 
+                ; 0xB0:0xB1 - WORD 88: Ultra DMA mode selected (LO BYTE)
                 mov     DPTR, #0x40B1
                 movx    @DPTR, A
 
                 sjmp    code_2420
 ; ---------------------------------------------------------------------------
 
-code_23EB:
+code_23EB:      ; 0x7E:0x7F - WORD 63: MULTIWORD DMA SELECTED
                 mov     R0, #0x99
                 mov     A, @R0
                 setb    C
@@ -894,56 +894,51 @@ code_23EB:
                 inc     R0
                 sjmp    code_2406
 ; ---------------------------------------------------------------------------
-
 code_2401:
                 clr     C
                 rlc     A
                 xch     A, R6
                 rlc     A
                 xch     A, R6
-
 code_2406:
                 djnz    R0, code_2401
                 mov     R7, A
                 sjmp    code_240F
-; ---------------------------------------------------------------------------
-
 code_240B:
                 mov     R6, #0
                 mov     R7, #0
-
 code_240F:
                 mov     DPTR, #0x407F
                 mov     A, R7
                 movx    @DPTR, A
                 sjmp    code_241B
-; ---------------------------------------------------------------------------
-
 code_2416:
                 mov     DPTR, #0x407F
                 clr     A
                 movx    @DPTR, A
 
-code_241B:
+; ---------------------------------------------------------------------------
+
+code_241B:      ; 0xB0:0xB1 - WORD 88: DMA MODE SELECTED
                 mov     DPTR, #0x40B1
                 clr     A
                 movx    @DPTR, A
 
-code_2420:
+
+code_2420:      ; 0xAA:0xAB - WORD 85: Command set/feature enabled.
                 jnb     RAM_29.1, code_242C
                 mov     DPTR, #0x40AA
                 movx    A, @DPTR
                 orl     A, #1
                 movx    @DPTR, A
                 sjmp    code_2433
-; ---------------------------------------------------------------------------
-
 code_242C:
                 mov     DPTR, #0x40AA
                 movx    A, @DPTR
                 anl     A, #0xFE
                 movx    @DPTR, A
 
+; ---------------------------------------------------------------------------
 code_2433:
                 mov     R0, #0xA3
                 mov     A, @R0
@@ -957,8 +952,7 @@ code_2433:
 ; ---------------------------------------------------------------------------
 
 code_2443:
-                mov     R7, #0x40 ; '@'
-
+                mov     R7, #0x40
 code_2445:
                 mov     A, R7
                 orl     A, #0x12
@@ -1005,32 +999,45 @@ code_2475:
                 ljmp    code_24FA
 ; ---------------------------------------------------------------------------
 
-code_247B:
+code_247B:      ; 0xA0:0xA1: WORD 80 - MAJOR VERSION NUMBER = 0
                 mov     DPTR, #0x40A0
                 clr     A
                 movx    @DPTR, A
                 inc     DPTR
                 movx    @DPTR, A
+
+                ; 0xA2:0xA3: WORD 81 - MINOR VERSION NUMBER = 0
                 inc     DPTR
                 movx    @DPTR, A
                 inc     DPTR
                 movx    @DPTR, A
+
+                ; 0xB0:0xB1: WORD 88 - DMA MODE SELECTED = 0
                 mov     DPTR, #0x40B1
                 movx    @DPTR, A
                 mov     DPTR, #0x40B0
                 movx    @DPTR, A
+
+                ; 0x6A:0x6B: WORD 53 - 3
+                ; the fields reported in word 88 are valid
+                ; the fields reported in words (70:64) are valid
                 mov     DPTR, #0x406A
                 mov     A, #3
                 movx    @DPTR, A
+
+                ; 0x140:0x141 WORD 160 - CFA power mode 1 = 0xF4
                 mov     DPTR, #0x4140
                 mov     A, #0xF4
                 movx    @DPTR, A
                 inc     DPTR
                 mov     A, #0x81
                 movx    @DPTR, A
+
+                ; 0x148:0x149 WORD 164 - Reserved for assignment by the CompactFlashä Association
                 mov     DPTR, #0x4148
                 mov     A, #0x1B
                 movx    @DPTR, A
+
                 push    DPH             ; Data Pointer, High Byte
                 push    DPL             ; Data Pointer, Low Byte
                 movx    A, @DPTR
@@ -1088,8 +1095,8 @@ code_247B:
                 mov     A, R7
                 orl     A, R6
                 movx    @DPTR, A
-
-code_24FA:
+; ---------------------------------------------------------------------------
+code_24FA:      ; SET UP WORD 76 ( offset 0x98 ) - RESERVED
                 jnb     RAM_2D.3, code_2531
                 mov     DPTR, #0x3D2C
                 clr     A
@@ -1103,25 +1110,24 @@ code_24FA:
                 mov     A, #0xE
                 movx    @DPTR, A
                 sjmp    code_252A
-; ---------------------------------------------------------------------------
-
 code_2514:
                 mov     DPTR, #0x3D2D
                 clr     A
                 movc    A, @A+DPTR
                 cjne    A, #2, code_2524
+                ; IF MEM[0x3D2D]==2 then
+                ; WORD 76 = 6
                 mov     DPTR, #0x4098
                 mov     A, #6
                 movx    @DPTR, A
                 sjmp    code_252A
-; ---------------------------------------------------------------------------
-
-code_2524:
+code_2524:      ; ELSE WORD 76 2
                 mov     DPTR, #0x4098
                 mov     A, #2
                 movx    @DPTR, A
 
-code_252A:
+
+code_252A:      ; 0xBA:0xBC -> WORD 93 - Hardware reset result.
                 mov     DPTR, #0x40BA
                 clr     A
                 movx    @DPTR, A
