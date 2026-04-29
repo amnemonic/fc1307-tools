@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 Script Name: fc1307_fw_dump.py
 
@@ -23,7 +24,7 @@ Created:
     2026-04-11
 
 Last Modified:
-    2026-04-11
+    2026-04-29
 """
 
 import os
@@ -92,7 +93,7 @@ def read_fw(fd,addr):
             print("SCSI Status:", io_hdr.status)
             print("Sense Data:", bytes(sense_buf[:io_hdr.sb_len_wr]).hex())
         else:
-            print(f"READ @ {addr:04X}h")
+            print('.',end='',flush=True)
 
         # Print returned data
         data = bytes(data_buf)
@@ -112,5 +113,6 @@ if __name__ == "__main__":
     for i in range(0,0x10000,0x200):
         data = read_fw(fd,i)
         binfile.write(data)
+    print()
     os.close(fd)
     binfile.close()
