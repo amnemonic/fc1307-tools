@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 Script Name: fc1307_fw_write.py
 
@@ -8,14 +9,14 @@ Description:
 
     This program uses vedor specific ATA command 0xFE with Features parameter = 0x0B
     Command writes 512 bytes buffer to SPI Flash addres defined in LBA address of ATA command
-    
-    IMPORTANT: Before flashing you must perform ERASE CHIP: ATA Command: 0xFE / FEATURES = 0x1C
+
+    For clearing SPI flash we are using custom command: ERASE CHIP: ATA Command: 0xFE / FEATURES = 0x1C
                You can do this with linux command: sg_raw -r 512 /dev/sdX a1 08 0e 1C 00 00 00 00 00 FE 00 00
-    
-    IMPORTANT2: If writing proces fails then FC1307 will use default BOOT ROOM which will allow you tou try again
-    
-    IMPORTANT3: If you try to flash firmware which is not dedicated to your board and is not patched then it most likely
-                stuck in infinite loop at address 0x03CE and PC will not detect it. Right now I don't have easier method 
+
+    IMPORTANT1: If writing proces fails then FC1307 will use default BOOT ROOM which will allow you tou try again
+
+    IMPORTANT2: If you try to flash firmware which is not dedicated to your board and is not patched then it most likely
+                stuck in infinite loop at address 0x03CE and PC will not detect it. Right now I don't have easier method
                 other than using external SPI flasher erease chip so device will boot again in safe mode.
 Author:
     Adam Mnemonic
@@ -34,7 +35,7 @@ Created:
     2026-04-18
 
 Last Modified:
-    2026-04-18
+    2026-04-29
 """
 
 import os
@@ -44,7 +45,8 @@ import ctypes
 
 
 SG_IO = 0x2285
-SG_DXFER_TO_DEV = -2
+SG_DXFER_TO_DEV   = -2  # e.g. a SCSI WRITE command */
+SG_DXFER_FROM_DEV = -3  # e.g. a SCSI READ command
 
 class sg_io_hdr_t(ctypes.Structure):
     _fields_ = [
@@ -72,13 +74,58 @@ class sg_io_hdr_t(ctypes.Structure):
         ("info", ctypes.c_uint),
     ]
 
+def send_ata_clear_flash(fd):
+    print("Clearing SPI Flash...")
+    cdb = (ctypes.c_ubyte * 12)(
+        0xA1,       # ATA PASS THROUGH (12)
+        0x08,       # PROTOCOL = PIO Data-In
+        0x0e,       # T_DIR=1, BYT_BLOK=1, T_LENGTH=2
+        0x1C,       # FEATURES = 0x1C
+        0x00,       # SECTOR COUNT = 1 (512 bytes)
+        0x00,       # LBA LOW
+        0x00,       # LBA MID
+        0x00,       # LBA HIGH
+        0x00,       # DEVICE
+        0xFE,       # COMMAND = 0xFE
+        0x00,       # RESERVED
+        0x00        # CONTROL
+    )
+
+    # --- Data buffer (512 bytes to receive) ---
+    data_buf = ctypes.create_string_buffer(512)
+
+    # --- Sense buffer ---
+    sense_buf = ctypes.create_string_buffer(32)
+
+    # --- SG_IO header ---
+    io_hdr                 = sg_io_hdr_t()
+    io_hdr.interface_id    = 0x53
+    io_hdr.dxfer_direction = SG_DXFER_FROM_DEV
+    io_hdr.cmd_len         = 12
+    io_hdr.mx_sb_len       = len(sense_buf)
+    io_hdr.dxfer_len       = len(data_buf)
+    io_hdr.dxferp          = ctypes.cast(data_buf, ctypes.c_void_p)
+    io_hdr.cmdp            = ctypes.cast(cdb, ctypes.c_void_p)
+    io_hdr.sbp             = ctypes.cast(sense_buf, ctypes.c_void_p)
+    io_hdr.timeout         = 5000
+    
+    fcntl.ioctl(fd, SG_IO, io_hdr)
+    
+    print(f"SCSI status: {io_hdr.status} / Host status: {io_hdr.host_status} / Driver status: {io_hdr.driver_status}")
+
+    if io_hdr.sb_len_wr > 0:
+        print("Sense data:", bytes(sense_buf[:io_hdr.sb_len_wr]).hex())
+
+    print(f'Clearing status: {bytes(data_buf)[0]:02X} (AA=OK)')
+
+
 
 def send_ata_data_out(fd, addr, data):
     # --- ATA PASS THROUGH (12) CDB ---
     lba_low = (addr >>  0) & 0xFF
     lba_mid = (addr >>  8) & 0xFF
     lba_hi  = (addr >> 16) & 0xFF
-    
+
     cdb = (ctypes.c_ubyte * 12)(
         0xA1,       # ATA PASS THROUGH (12)
         0x0A,       # PROTOCOL = PIO Data-Out
@@ -116,12 +163,13 @@ def send_ata_data_out(fd, addr, data):
     io_hdr.sbp             = ctypes.cast(sense_buf, ctypes.c_void_p)
     io_hdr.timeout         = 5000
 
-    
+
 
 
     fcntl.ioctl(fd, SG_IO, io_hdr)
 
-    print(f"SCSI status: {io_hdr.status} / Host status: {io_hdr.host_status} / Driver status: {io_hdr.driver_status}")
+    #print(f"SCSI status: {io_hdr.status} / Host status: {io_hdr.host_status} / Driver status: {io_hdr.driver_status}")
+    return io_hdr.status
 
     if io_hdr.sb_len_wr > 0:
         print("Sense data:", bytes(sense_buf[:io_hdr.sb_len_wr]).hex())
@@ -136,12 +184,15 @@ if __name__ == "__main__":
 
     if len(rom)!=0x10000:
         exit('Rom size different than 0x10000 (64kB)')
-    
+
     try:
         fd = os.open(device, os.O_RDWR)
+        send_ata_clear_flash(fd)
         
         for a in range(0,0x10000,512):
             data = rom[a:a+512]
-            send_ata_data_out(fd, a, data)
+            s = send_ata_data_out(fd, a, data)
+            print(s,end='',flush=True)
+        print()
     finally:
         os.close(fd)
