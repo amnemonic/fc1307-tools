@@ -9,8 +9,6 @@
         .area CODE (ABS)
         .org 0xB000        ; <-- where you want to place code
 
-        ;lcall   0x2015
-
 _checksum:
         ;------------------------------------------
         ; Write 0x5A to 0x41FE
